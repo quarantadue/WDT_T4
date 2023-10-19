@@ -22,6 +22,10 @@ static void watchdog2_isr();
 static void watchdog3_isr();
 static void ewm_isr();
 
+// lpo_clok can range from 32kHz to 32.768 kHz
+// on teensy it's 32.768 kHz
+constexpr float lpo_clock_frequency = 32.768 // kHz
+
 WDT_FUNC void WDT_OPT::begin(WDT_timings_t config) {
   IOMUXC_GPR_GPR16 |= 0x200000; /* undocumented register found by PaulS to fix reset */
   uint32_t nvicIRQ = 0;
@@ -49,10 +53,11 @@ WDT_FUNC void WDT_OPT::begin(WDT_timings_t config) {
     uint16_t toVal = 0;
 
     if ( config.clock == LPO_CLK || config.clock == INT_CLK ) { /* LPO_CLOCK & INT_CLOCK are 32KHz */
-      double highest_limit_without_prescaler = ((1.0f/32.0f)*65535.0f);
-      double lowest_limit_without_prescaler = ((1.0f/32.0f)*1.0f);
-      double highest_limit_with_prescaler = ((255.0f/32.0f)*65535.0f);
-      double lowest_limit_with_prescaler = ((255.0f/32.0f)*1.0f);
+      // all times are in ms	
+      double highest_limit_without_prescaler = ((1.0f/lpo_clock_frequency)*65535.0f);
+      double lowest_limit_without_prescaler = ((1.0f/lpo_clock_frequency)*1.0f);
+      double highest_limit_with_prescaler = ((256.0f/lpo_clock_frequency)*65535.0f);
+      double lowest_limit_with_prescaler = ((256.0f/lpo_clock_frequency)*1.0f);
       (void)lowest_limit_with_prescaler; /* unused, kept for reference */
       config.timeout = constrain(config.timeout, lowest_limit_without_prescaler, highest_limit_with_prescaler);
       config.window = constrain(config.window, lowest_limit_without_prescaler, highest_limit_with_prescaler);
@@ -62,8 +67,8 @@ WDT_FUNC void WDT_OPT::begin(WDT_timings_t config) {
       }
       else { /* use prescaler */
         preScaler = 1;
-        toVal = (config.timeout/(255.0f/32.0f));
-        if ( config.window ) config.window = (config.window/(255.0f/32.0f));
+        toVal = (config.timeout/(256.0f/32.0f));
+        if ( config.window ) config.window = (config.window/(256.0f/32.0f));
       }
     }
 
