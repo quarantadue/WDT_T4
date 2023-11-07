@@ -62,13 +62,13 @@ WDT_FUNC void WDT_OPT::begin(WDT_timings_t config) {
       config.timeout = constrain(config.timeout, lowest_limit_without_prescaler, highest_limit_with_prescaler);
       config.window = constrain(config.window, lowest_limit_without_prescaler, highest_limit_with_prescaler);
       if ( config.timeout < highest_limit_without_prescaler ) { /* prescaler not needed */
-        toVal = (config.timeout/(1.0f/32.0f));
-        if ( config.window ) config.window = (config.window/(1.0f/32.0f));
+        toVal = (config.timeout/(1.0f/lpo_clock_frequency));
+        if ( config.window ) config.window = (config.window/(1.0f/lpo_clock_frequency));
       }
       else { /* use prescaler */
         preScaler = 1;
-        toVal = (config.timeout/(256.0f/32.0f));
-        if ( config.window ) config.window = (config.window/(256.0f/32.0f));
+        toVal = (config.timeout/(256.0f/lpo_clock_frequency));
+        if ( config.window ) config.window = (config.window/(256.0f/lpo_clock_frequency));
       }
     }
 
